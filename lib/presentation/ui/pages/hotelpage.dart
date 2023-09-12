@@ -1,11 +1,10 @@
-import 'package:dio/dio.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:hotelapp/model/hotel_onfo.dart';
-// import 'package:hotelapp/models/hotel_screen.dart';
-import 'package:hotelapp/service/api_service.dart';
-import 'package:hotelapp/service/remote_service.dart';
+import 'package:hotelapp/presentation/ui/widgets/imageSlider.dart';
+import 'package:hotelapp/presentation/ui/widgets/peculiaritywid.dart';
+import 'package:hotelapp/service/hotel_service.dart';
 import '../../../consts/color_palette.dart';
-import '../../../models/hotel_screen.dart';
+import '../../../models/hotel_info.dart';
 
 class HotelPage extends StatefulWidget {
   const HotelPage({Key? key}) : super(key: key);
@@ -15,7 +14,7 @@ class HotelPage extends StatefulWidget {
 }
 
 class _HotelPageState extends State<HotelPage> {
-  HotelMode? hotmod;
+  HotelMode? hotmod;                              // object of class
   var isLoaded = false;
 
   @override
@@ -24,9 +23,9 @@ class _HotelPageState extends State<HotelPage> {
     getData();
   }
 
-  getData() async {
-    hotmod = await RemoteService().getPosts();
-    if (hotmod != null) {
+  Future getData() async {
+    hotmod = await HotelService().getHotelInfo();
+    if (hotmod != null) {                            // checks if it has data
       setState(() {
         isLoaded = true;
       });
@@ -36,7 +35,7 @@ class _HotelPageState extends State<HotelPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.red,
+        backgroundColor: backgroundbgtheme,
         appBar: AppBar(
           centerTitle: true,
           title: const Text(
@@ -52,69 +51,30 @@ class _HotelPageState extends State<HotelPage> {
             child: CircularProgressIndicator(),
           ),
           visible: isLoaded,
-          child: HotelScreen(
-            image: hotmod!.imageUrls[0],
-              hotelname: hotmod!.name,
-              price: hotmod!.minimalPrice,
-              country: hotmod!.adress,
-              rating: hotmod!.rating,
-              ratingName: hotmod!.ratingName),
-        ));
+          child: ListView(
+            children: [ HotelScreen(
+              image: hotmod!.imageUrls,
+                hotelname: hotmod!.name,
+                price: hotmod!.minimalPrice,
+                priceForIt: hotmod!.priceForIt,
+                country: hotmod!.adress,
+                rating: hotmod!.rating,
+                ratingName: hotmod!.ratingName),
+              HotelDescription(hotdesc: hotmod!.aboutTheHotel.description, peculiarities: hotmod!.aboutTheHotel.peculiarities, pecnum: hotmod!.aboutTheHotel.peculiarities.length),
+              const BottomButtonWidget()
+              ]
+          ),
+        )
+    );
   }
 }
-// FutureBuilder _body() {
-//   final apiService =
-//       ApiService(Dio(BaseOptions(contentType: "application/json")));
-//   return FutureBuilder(
-//     future: apiService.getHotels(),
-//     builder: (context, snapshots) {
-//       if (snapshots.connectionState == ConnectionState.done) {
-//         if (snapshots.hasData) {
-//           final List<HotelModel> hotels = snapshots.data!;
-//           return _hotels(hotels);
-//         } else {
-//           return const Center(
-//             child: Text(
-//                 "Error has occurred"),
-//           );
-//         }
-//       } else {
-//         return const Center(
-//           child: CircularProgressIndicator(),
-//         );
-//       }
-//     },
-//   );
-// }
-
-//   Widget _hotels(List<HotelModel> hotels) {
-//     return ListView.builder(
-//         itemCount: hotels.length,
-//         itemBuilder: (context, index) {
-//           return Stack(children: [
-//             ListView(
-//               children: [
-//                 HotelScreen(
-//                   hotelname: hotels[index].name,
-//                   price: hotels[index].minimalPrice,
-//                   rating: hotels[index].rating,
-//                   ratingName: hotels[index].ratingName,
-//                   country: hotels[index].adress,
-//                 ),
-//                 const HotelDescription(),
-//               ],
-//             ),
-//             const BottomButtonWidget()
-//           ]);
-//         });
-//   }
-// }
 
 class HotelScreen extends StatelessWidget {
   const HotelScreen(
       {Key? key,
       required this.hotelname,
       required this.price,
+      required this.priceForIt,
       required this.rating,
       required this.ratingName,
         required this.image,
@@ -124,9 +84,10 @@ class HotelScreen extends StatelessWidget {
   final String hotelname;
   final String ratingName;
   final int price;
+  final String priceForIt;
   final int rating;
   final String country;
-  final String image;
+  final List<String> image;
 
   @override
   Widget build(BuildContext context) {
@@ -137,21 +98,16 @@ class HotelScreen extends StatelessWidget {
           borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(16),
               bottomRight: Radius.circular(16))),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(height: 250, width: double.infinity, decoration: BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(image)
-            ),
-              borderRadius: BorderRadius.circular(16)
-          ),),
+          ImageSlider(image: image),
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              width: 160,
+              width: 150,
               margin: const EdgeInsets.symmetric(vertical: 8),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -160,7 +116,7 @@ class HotelScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.star,
                     size: 20,
                     color: Colors.orange,
@@ -177,13 +133,13 @@ class HotelScreen extends StatelessWidget {
               ),
             ),
           ),
-          Text(
-            hotelname,
-            style: const TextStyle(fontSize: 32),
+          const Text(
+            'Steigenberger Makadi',
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.w500),
           ),
           Text(
             country,
-            style: TextStyle(fontSize: 18, color: Colors.blue),
+            style: const TextStyle(fontSize: 16, color: Colors.blue, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 12),
           Row(
@@ -192,10 +148,10 @@ class HotelScreen extends StatelessWidget {
               Text(
                 'от ${price.toString()} ₽',
                 style:
-                    const TextStyle(fontSize: 28, fontWeight: FontWeight.w500),
+                    const TextStyle(fontSize: 28, fontWeight: FontWeight.w500, fontFamily: 'SFPro'),
               ),
-              const Text('за тур с переводом',
-                  style: TextStyle(fontSize: 20, color: Colors.grey)),
+              Text(priceForIt.toString(),
+                  style: const TextStyle(fontSize: 18, color: servicecol)),
             ],
           ),
         ],
@@ -205,11 +161,16 @@ class HotelScreen extends StatelessWidget {
 }
 
 class HotelDescription extends StatelessWidget {
-  const HotelDescription({Key? key}) : super(key: key);
+  HotelDescription({Key? key, required this.hotdesc, required this.peculiarities, required this.pecnum}) : super(key: key);
+
+  final String hotdesc;
+  final List<String> peculiarities;
+  final int pecnum;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 500,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
           color: backgroundtheme, borderRadius: BorderRadius.circular(15)),
@@ -219,35 +180,23 @@ class HotelDescription extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'About',
+            'Об отеле',
             style: TextStyle(fontSize: 26),
           ),
-          const Text(
-            'Lorem ipsum dolor sit amet, consectetur disciplining elit, sed do eiusmod tempor incididunt'
-            ' ut labore et dolore magna aliqua.',
-            style: TextStyle(fontSize: 18),
+          Wrap(
+            children:
+              List.generate(pecnum, (index) {
+                return PeculiarityWid(peculiarities: peculiarities, index: index);
+              })
+          ),
+          Text(
+            hotdesc,
+            style: const TextStyle(fontSize: 18),
           ),
           Container(
             padding: const EdgeInsets.all(8),
-            // child: ListView.separated(
-            //   shrinkWrap: true,
-            //   itemCount: 3,
-            //   itemBuilder: (BuildContext context, int index) {
-            //     return ListTile(
-            //       dense: true,
-            //       leading: const Icon(Icons.star),
-            //       title: Text("Title: $index"),
-            //       subtitle: Text("Subtitle: $index"),
-            //       trailing: const Icon(Icons.arrow_forward_ios),
-            //       onTap: () {},
-            //     );
-            //   },
-            //   separatorBuilder: (BuildContext context, int index) {
-            //     return const Divider(height: 1, thickness: 1);
-            //   },
-            // ),
             decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: backgroundbgtheme,
                 borderRadius: BorderRadius.circular(15)),
             child: Column(
               children: [
@@ -347,7 +296,7 @@ class BottomButtonWidget extends StatelessWidget {
               shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18.0)))),
-          child: const Text('Choose room'),
+          child: const Text('К выбору номера'),
           onPressed: () {
             Navigator.pushNamed(context, '/np');
           },

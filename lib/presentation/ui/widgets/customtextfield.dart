@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../consts/color_palette.dart';
 
 class CustomTextField extends StatelessWidget {
-  CustomTextField({Key? key, required this.textfield}) : super(key: key);
+  CustomTextField({Key? key, required this.textfield, required this.controller, required this.newValue}) : super(key: key);
 
   String textfield;
+  final String newValue;
+  TextEditingController controller = TextEditingController();
 
   FocusNode myFocusNode = FocusNode();
 
@@ -19,6 +21,13 @@ class CustomTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: TextFormField(
+          validator: (value) {
+            if (value!.isEmpty) return 'Это поле обязательно';
+          },
+          onChanged: (value) {
+            value = value;
+          },
+          controller: controller,
             focusNode: myFocusNode,
             decoration: InputDecoration(
                 contentPadding: const EdgeInsets.all(0),
